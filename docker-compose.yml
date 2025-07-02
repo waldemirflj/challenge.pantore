@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  database:
+    image: mysql/mysql-server:8.0
+    ports:
+      - '${DATABASE_PORT}:3306'
+    restart: unless-stopped
+    container_name: database
+    volumes:
+      - ./.docker/mysql:/var/lib/mysql
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ${DATABASE_NAME}
+      MYSQL_USER: ${DATABASE_USER}
+      MYSQL_PASSWORD: ${DATABASE_PASS}
+    healthcheck:
+      test: >
+        bash -c "mysqladmin ping -h 127.0.0.1 -u${DATABASE_USER} -p${DATABASE_PASS} --silent"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  test:
+    build:
+      context: .
+      target: test
+    container_name: test
+    env_file:
+      - ./.env.test
+
+  production:
+    build:
+      context: .
+      target: production
+    container_name: production
+    ports:
+      - '3001:3001'
+    env_file:
+      - ./.env.production
+    environment:
+      PORT: ${PORT}
+      NODE_ENV: ${NODE_ENV}
+      LOGGING: ${LOGGING}
+      DEBUGIN: ${DEBUGIN}
+      SYNCHRONIZE: 'true' # Permite a sincronização do bando de dados
+      DATABASE_HOST: 'database'
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASS: ${DATABASE_PASS}
+    depends_on:
+      database:
+        condition: service_healthy
+
+  development:
+    build:
+      context: .
+      target: development
+    container_name: development
+    ports:
+      - '${PORT}:3001'
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    env_file:
+      - ./.env
+    environment:
+      PORT: ${PORT}
+      NODE_ENV: ${NODE_ENV}
+      LOGGING: 'true' # Permite a visualização do log
+      DEBUGIN: ${DEBUGIN}
+      SYNCHRONIZE: 'true' # Permite a sincronização do bando de dados
+      DATABASE_HOST: 'database'
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASS: ${DATABASE_PASS}
+    depends_on:
+      database:
+        condition: service_healthy
