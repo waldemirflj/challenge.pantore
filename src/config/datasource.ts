@@ -1,9 +1,7 @@
+import 'dotenv/config';
 import 'reflect-metadata';
-import dotenv from 'dotenv';
 import { join } from 'path';
 import { DataSource } from 'typeorm';
-
-dotenv.config();
 
 const entities = join(__dirname, '../**/*.entity.{js,ts}');
 const migrations = join(__dirname, '../migrations/*.{js,ts}');

@@ -1,6 +1,3 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
 import { App } from './express';
 import { AppDataSource } from './config/datasource';
 
