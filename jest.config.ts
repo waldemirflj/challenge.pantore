@@ -9,6 +9,10 @@ const config: Config = {
   transform: {
     ...tsJestTransformCfg,
   },
+  testMatch: ['<rootDir>/src/**/*.test.ts'],
+  testPathIgnorePatterns: ['dist', 'node_modules'],
+  verbose: true,
+  coverageDirectory: 'coverage',
 };
 
 export default config;
