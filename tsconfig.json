@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es2020",
-    "module": "commonjs",
+    "target": "es2024",
+    "module": "es2022",
     "rootDir": "./src",
     "outDir": "./dist",
     "strict": true,
@@ -11,8 +11,9 @@
     "experimentalDecorators": true,
     "strictPropertyInitialization": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true
   },
   "include": [
     "src/**/*"
@@ -20,7 +21,6 @@
   "exclude": [
     "dist",
     "node_modules",
-    "jest.config.ts",
-    "eslint.config.js",
+    "**/*.test.ts"
   ]
 }

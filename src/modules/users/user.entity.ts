@@ -14,14 +14,14 @@ export class User {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ name: 'name', nullable: false })
+  @Column({ type: 'varchar', name: 'name', nullable: false })
   name!: string;
 
-  @Column({ name: 'email', unique: true, nullable: false })
+  @Column({ type: 'varchar', name: 'email', unique: true, nullable: false })
   email!: string;
 
   @Exclude()
-  @Column({ name: 'password', nullable: false })
+  @Column({ type: 'varchar', name: 'password', nullable: false })
   password!: string;
 
   @Column({

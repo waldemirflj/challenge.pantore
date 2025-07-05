@@ -10,14 +10,15 @@ export class App {
     this.instance = express()
       .use(cors())
       .use(express.urlencoded({ extended: true }))
-      .use(express.json())
-      .use(routes);
+      .use(express.json());
   }
 
   async start(): Promise<void> {
     try {
       await this.dataSource.initialize();
-      console.log('banco conectado');
+
+      // rotas
+      this.instance.use(routes(this.dataSource));
     } catch (error) {
       console.error('Erro ao conectar no banco', error);
     }

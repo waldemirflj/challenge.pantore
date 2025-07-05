@@ -1,35 +1,36 @@
-jest.mock('../../../config/datasource', () => {
-  const { AppDataSourceTest } = require('../../../config/datasource.test-config');
-
-  return {
-    AppDataSource: AppDataSourceTest,
-  };
-});
-
 import request from 'supertest';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { App } from '../../../express';
 import { AppDataSourceTest } from '../../../config/datasource.test-config';
 
-let app: App;
+let app: import('express').Express;
 
 beforeAll(async () => {
-  app = new App(AppDataSourceTest);
+  const appInstance = new App(AppDataSourceTest);
+  await appInstance.start();
 
-  await app.start();
+  app = appInstance.instance;
+
+  // await AppDataSourceTest.initialize();
+  await AppDataSourceTest.synchronize(true); // força a limpaza do banco
 });
 
 afterEach(async () => {
-  await AppDataSourceTest.synchronize(true);
+  if (AppDataSourceTest.isInitialized) {
+    await AppDataSourceTest.synchronize(true);
+  }
 });
 
 afterAll(async () => {
-  await AppDataSourceTest.destroy();
+  if (AppDataSourceTest.isInitialized) {
+    await AppDataSourceTest.destroy();
+  }
 });
 
 describe('Usuario', () => {
   describe('GET /api/v1/users', () => {
     it('Deve retornar um array de usuarios vazio', async () => {
-      const res = await request(app.instance).get('/api/v1/users');
+      const res = await request(app).get('/api/v1/users');
 
       expect(res.body).toEqual([]);
       expect(res.statusCode).toBe(200);
@@ -50,9 +51,9 @@ describe('Usuario', () => {
         password: 'teste',
       };
 
-      await request(app.instance).post('/api/v1/users').send(data1);
-      await request(app.instance).post('/api/v1/users').send(data2);
-      const res = await request(app.instance).get('/api/v1/users');
+      await request(app).post('/api/v1/users').send(data1);
+      await request(app).post('/api/v1/users').send(data2);
+      const res = await request(app).get('/api/v1/users');
 
       expect(res.statusCode).toBe(200);
       expect(res.body.length).toBeGreaterThan(1);
@@ -68,7 +69,7 @@ describe('Usuario', () => {
         password: 'teste',
       };
 
-      const res = await request(app.instance).post('/api/v1/users').send(data);
+      const res = await request(app).post('/api/v1/users').send(data);
 
       expect(res.statusCode).toBe(201);
       expect(res.body).toHaveProperty('id');
@@ -89,8 +90,8 @@ describe('Usuario', () => {
         password: 'teste',
       };
 
-      await request(app.instance).post('/api/v1/users').send(data);
-      const res = await request(app.instance).post('/api/v1/users').send(data);
+      await request(app).post('/api/v1/users').send(data);
+      const res = await request(app).post('/api/v1/users').send(data);
 
       expect(res.statusCode).toBe(400);
       expect(res.body).toHaveProperty('error');
@@ -105,8 +106,8 @@ describe('Usuario', () => {
         password: 'teste',
       };
 
-      await request(app.instance).post('/api/v1/users').send(data);
-      const res = await request(app.instance).post('/api/v1/users').send(data);
+      await request(app).post('/api/v1/users').send(data);
+      const res = await request(app).post('/api/v1/users').send(data);
 
       expect(res.statusCode).toBe(400);
       expect(res.body).toHaveProperty('error');
@@ -132,9 +133,9 @@ describe('Usuario', () => {
         password: 'teste',
       };
 
-      await request(app.instance).post('/api/v1/users').send(data1);
-      await request(app.instance).post('/api/v1/users').send(data2);
-      const res = await request(app.instance).get(`/api/v1/users/${id}`);
+      await request(app).post('/api/v1/users').send(data1);
+      await request(app).post('/api/v1/users').send(data2);
+      const res = await request(app).get(`/api/v1/users/${id}`);
 
       expect(res.statusCode).toBe(200);
       expect(res.body.length).toBeGreaterThan(0);
@@ -146,7 +147,7 @@ describe('Usuario', () => {
 
     it('Deve retornar um erro ao buscar um usuario invalido', async () => {
       const id = 2;
-      const res = await request(app.instance).get(`/api/v1/users/${id}`);
+      const res = await request(app).get(`/api/v1/users/${id}`);
 
       expect(res.statusCode).toBe(404);
       expect(res.body).toHaveProperty('error');
@@ -163,15 +164,15 @@ describe('Usuario', () => {
         password: 'teste',
       };
 
-      const user = await request(app.instance).post('/api/v1/users').send(data);
+      const user = await request(app).post('/api/v1/users').send(data);
       const userId = user.body.id;
 
       const name = 'Teste do Update';
-      const update = await request(app.instance)
+      const update = await request(app)
         .put(`/api/v1/users/${userId}`)
         .send(Object.assign(data, { name }));
 
-      const res = await request(app.instance).get(`/api/v1/users/${userId}`);
+      const res = await request(app).get(`/api/v1/users/${userId}`);
 
       expect(update.statusCode).toBe(200);
       expect(res.body.length).toBeGreaterThan(0);
@@ -188,7 +189,7 @@ describe('Usuario', () => {
         name: 'Teste do Update invalido',
       };
 
-      const res = await request(app.instance).put(`/api/v1/users/${id}`).send(data);
+      const res = await request(app).put(`/api/v1/users/${id}`).send(data);
 
       expect(res.statusCode).toBe(404);
       expect(res.body).toHaveProperty('error');
@@ -205,19 +206,19 @@ describe('Usuario', () => {
         password: 'teste',
       };
 
-      const user = await request(app.instance).post('/api/v1/users').send(data);
+      const user = await request(app).post('/api/v1/users').send(data);
       const userId = user.body.id;
 
-      await request(app.instance)
+      await request(app)
         .post('/api/v1/users')
         .send(Object.assign(data, { email: 'teste2@teste.com' }));
 
-      await request(app.instance)
+      await request(app)
         .post('/api/v1/users')
         .send(Object.assign(data, { email: 'teste3@teste.com' }));
 
-      const deleted = await request(app.instance).delete(`/api/v1/users/${userId}`);
-      const users = await request(app.instance).get(`/api/v1/users/`);
+      const deleted = await request(app).delete(`/api/v1/users/${userId}`);
+      const users = await request(app).get(`/api/v1/users/`);
 
       expect(deleted.statusCode).toBe(200);
       expect(users.body.length).toBeGreaterThan(1);
@@ -225,7 +226,7 @@ describe('Usuario', () => {
 
     it('Deve retornar um erro ao deletar um usuario invalido', async () => {
       const id = 2;
-      const resp = await request(app.instance).delete(`/api/v1/users/${id}`);
+      const resp = await request(app).delete(`/api/v1/users/${id}`);
 
       expect(resp.statusCode).toBe(404);
       expect(resp.body).toHaveProperty('error');

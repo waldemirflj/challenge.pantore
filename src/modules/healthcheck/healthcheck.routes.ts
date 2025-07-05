@@ -1,7 +1,10 @@
 import { Router, Request, Response } from 'express';
+import { DataSource } from 'typeorm';
 
-export default Router().get('/', (req: Request, res: Response) => {
-  res.json({
-    message: 'Welcome.',
+export const healthcheckRoutes = (dataSource: DataSource) => {
+  return Router().get('/', (req: Request, res: Response) => {
+    res.json({
+      message: 'Welcome.',
+    });
   });
-});
+};
